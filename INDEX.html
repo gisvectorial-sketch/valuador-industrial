@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Valuador Industrial NL — Arq. Alvaro Chapa Villarreal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --bg:       #F5F4F0;
+  --surface:  #FFFFFF;
+  --border:   #E2E0D8;
+  --border2:  #CECCC2;
+  --text1:    #1A1916;
+  --text2:    #5A5850;
+  --text3:    #9A9890;
+  --accent:   #1A3A2A;
+  --accent2:  #2D6348;
+  --accent3:  #3D8A60;
+  --success:  #2A7A4B;
+  --suc-bg:   #EAF4EE;
+  --warn:     #854F0B;
+  --warn-bg:  #FDF3E3;
+  --danger:   #A32D2D;
+  --dan-bg:   #FCEBEB;
+  --info-bg:  #EDF5F0;
+  --radius:   12px;
+  --radius-sm:8px;
+  --shadow:   0 2px 12px rgba(0,0,0,0.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text1);min-height:100vh;padding-bottom:48px;}
+
+.app-header{background:var(--accent);padding:18px 20px 14px;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px;}
+.avatar{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:16px;color:#fff;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.22);}
+.header-name{font-size:14px;font-weight:600;color:#fff;line-height:1.2;}
+.header-sub{font-size:11px;color:rgba(255,255,255,0.65);margin-top:2px;}
+.header-badge{margin-left:auto;font-size:10px;font-weight:500;background:rgba(255,255,255,0.14);color:rgba(255,255,255,0.85);padding:3px 10px;border-radius:20px;white-space:nowrap;}
+
+.main{max-width:640px;margin:0 auto;padding:14px 13px 0;}
+
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:11px;box-shadow:var(--shadow);overflow:hidden;}
+.card-head{padding:11px 15px 0;font-size:10px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--text3);}
+.card-body{padding:11px 15px 15px;}
+
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.field{margin-bottom:11px;}.field:last-child{margin-bottom:0;}
+label{display:block;font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500;}
+select,input[type=number]{width:100%;padding:9px 11px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg);color:var(--text1);font-family:'DM Sans',sans-serif;font-size:13px;appearance:none;-webkit-appearance:none;outline:none;transition:border-color 0.15s;}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A5850' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;}
+select:focus,input[type=number]:focus{border-color:var(--accent3);}
+
+.chk-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:2px;}
+.chk-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer;padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);transition:all 0.15s;}
+.chk-item:has(input:checked){background:var(--info-bg);border-color:var(--accent3);color:var(--accent);}
+.chk-item input{width:14px;height:14px;flex-shrink:0;accent-color:var(--accent2);}
+
+.tabs{display:flex;gap:5px;padding:11px 15px 0;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{font-size:12px;font-weight:500;padding:5px 13px;border:1px solid var(--border2);border-radius:20px;cursor:pointer;white-space:nowrap;color:var(--text2);background:var(--surface);transition:all 0.15s;flex-shrink:0;}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.panel{display:none;}.panel.active{display:block;}
+
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.metric{background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);padding:10px 12px;}
+.metric-lbl{font-size:10px;color:var(--text3);margin-bottom:3px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
+.metric-val{font-size:17px;font-weight:600;color:var(--text1);}
+
+.total-box{background:var(--info-bg);border:1.5px solid var(--accent3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.total-lbl{font-size:10px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;}
+.total-val{font-size:22px;font-weight:700;color:var(--accent);font-family:'DM Serif Display',serif;}
+
+.rango-wrap{margin:8px 0 10px;}
+.rango-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:5px;}
+.rango-track{height:8px;background:var(--bg);border-radius:4px;border:1px solid var(--border);position:relative;}
+.rango-fill{position:absolute;inset:0;border-radius:4px;background:var(--info-bg);border:1px solid var(--accent3);}
+.rango-needle{position:absolute;top:-5px;width:3px;height:18px;background:var(--accent);border-radius:2px;transform:translateX(-50%);transition:left 0.3s;}
+
+.factor-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.factor-row:last-child{border-bottom:none;}
+.factor-lbl{color:var(--text2);}
+.badge{font-size:11px;padding:2px 9px;border-radius:var(--radius-sm);font-weight:500;}
+.badge-pos{background:var(--suc-bg);color:var(--success);}
+.badge-neg{background:var(--dan-bg);color:var(--danger);}
+.badge-neu{background:var(--bg);color:var(--text2);border:1px solid var(--border);}
+
+.risk-row{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);line-height:1.5;}
+.risk-row:last-child{border-bottom:none;}
+.risk-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+
+.note{font-size:11px;color:var(--text3);line-height:1.6;}
+
+.admin-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin:14px 0 8px;}
+.admin-title:first-child{margin-top:0;}
+.admin-table{width:100%;border-collapse:collapse;}
+.admin-table th{font-size:10px;color:var(--text3);font-weight:600;text-align:left;padding:5px 4px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.05em;}
+.admin-table td{padding:5px 4px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;color:var(--text1);}
+.admin-table input[type=number]{width:90px;font-size:12px;padding:4px 7px;}
+.admin-table select{width:110px;font-size:12px;padding:4px 7px;}
+.save-badge{font-size:11px;padding:4px 12px;border-radius:16px;background:var(--suc-bg);color:var(--success);display:none;font-weight:500;}
+.btn-save{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-reset{background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 14px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text2);cursor:pointer;}
+.btn-actions{display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap;}
+
+.btn-pdf{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity 0.15s;margin-top:4px;box-shadow:0 4px 14px rgba(26,58,42,0.22);}
+.btn-pdf:active{opacity:0.85;}
+
+.app-footer{text-align:center;font-size:11px;color:var(--text3);margin-top:18px;padding:0 13px;}
+
+@media(max-width:380px){.row2{grid-template-columns:1fr;}.metrics{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <div class="avatar">AC</div>
+    <div>
+      <div class="header-name">Arq. Alvaro Chapa Villarreal</div>
+      <div class="header-sub">📱 WhatsApp 81 2289 4100</div>
+    </div>
+    <div class="header-badge">Industrial NL</div>
+  </div>
+</header>
+
+<main class="main">
+
+<div class="card">
+  <div class="card-head">Valuador de terrenos industriales — NL 2025</div>
+  <div class="card-body">
+    <div class="row2">
+      <div class="field">
+        <label>Corredor / Zona</label>
+        <select id="zona">
+          <option value="apodaca_norte">Apodaca Norte</option>
+          <option value="apodaca_sur" selected>Apodaca Sur</option>
+          <option value="escobedo">Escobedo / FINSA</option>
+          <option value="garcia">García / Mty Norte</option>
+          <option value="guadalupe">Guadalupe / Oriente</option>
+          <option value="pesqueria">Pesquería / KIIA</option>
+          <option value="salinas">Salinas Victoria</option>
+          <option value="santacatarina">Sta. Catarina Poniente</option>
+          <option value="cienega">Ciénega de Flores</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Superficie (m²)</label>
+        <input type="number" id="sup" value="5000" min="500" max="500000" step="500">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Uso de suelo</label>
+        <select id="uso">
+          <option value="1.00" selected>Industrial ligero</option>
+          <option value="1.10">Industrial pesado</option>
+          <option value="0.85">Parque industrial</option>
+          <option value="1.15">Logística / distribución</option>
+          <option value="0.75">Mixto industrial</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Forma del terreno</label>
+        <select id="forma">
+          <option value="1.00" selected>Regular</option>
+          <option value="0.90">Irregular leve</option>
+          <option value="0.80">Irregular pronunciada</option>
+          <option value="1.05">Esquina / 2 frentes</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Servicios disponibles</label>
+      <div class="chk-grid">
+        <label class="chk-item"><input type="checkbox" id="s_agua" checked> Agua y drenaje</label>
+        <label class="chk-item"><input type="checkbox" id="s_elec" checked> Electricidad MT/AT</label>
+        <label class="chk-item"><input type="checkbox" id="s_gas" checked> Gas natural</label>
+        <label class="chk-item"><input type="checkbox" id="s_vial"> Vialidad pavimentada</label>
+        <label class="chk-item"><input type="checkbox" id="s_ferro"> Acceso ferroviario</label>
+        <label class="chk-item"><input type="checkbox" id="s_fibre"> Fibra óptica</label>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Acceso a vialidad</label>
+        <select id="vial">
+          <option value="1.15">Autopista / Blvd. principal</option>
+          <option value="1.00" selected>Carretera estatal</option>
+          <option value="0.85">Calle secundaria</option>
+          <option value="0.75">Camino de terracería</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Topografía</label>
+        <select id="topo">
+          <option value="1.00" selected>Plana (0–2%)</option>
+          <option value="0.92">Leve pendiente (2–5%)</option>
+          <option value="0.80">Pendiente moderada (5–10%)</option>
+          <option value="0.65">Pendiente fuerte (+10%)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('resultado',this)">Resultado</div>
+    <div class="tab" onclick="showTab('factores',this)">Factores</div>
+    <div class="tab" onclick="showTab('riesgos',this)">Alertas</div>
+    <div class="tab" onclick="showTab('admin',this)">⚙ Editar</div>
+  </div>
+
+  <div id="panel-resultado" class="panel active card-body">
+    <div class="metrics">
+      <div class="metric"><div class="metric-lbl">Valor / m²</div><div class="metric-val" id="r-m2">$0</div></div>
+      <div class="metric"><div class="metric-lbl">Superficie</div><div class="metric-val" id="r-sup">0 m²</div></div>
+    </div>
+    <div class="total-box">
+      <div>
+        <div class="total-lbl">Valor total estimado</div>
+        <div class="total-val" id="r-total">$0</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:10px;color:var(--accent);font-weight:600;">MXN</div>
+        <div style="font-size:10px;color:var(--accent);opacity:0.7;">Sin IVA</div>
+      </div>
+    </div>
+    <div class="rango-wrap">
+      <div class="rango-labels"><span id="r-lo">—</span><span style="font-size:11px;font-weight:500;color:var(--text2);">Rango de mercado</span><span id="r-hi">—</span></div>
+      <div class="rango-track"><div class="rango-fill"></div><div class="rango-needle" id="rneedle"></div></div>
+    </div>
+    <p class="note" id="r-nota"></p>
+  </div>
+
+  <div id="panel-factores" class="panel card-body">
+    <div id="lista-factores"></div>
+    <p class="note" style="margin-top:10px;">Los factores se multiplican sobre el precio base del corredor para obtener el valor final por m².</p>
+  </div>
+
+  <div id="panel-riesgos" class="panel card-body">
+    <div id="lista-riesgos"></div>
+    <p class="note" style="margin-top:10px;">Este análisis es paramétrico y orientativo. No sustituye un avalúo formal ante notario o institución bancaria.</p>
+  </div>
+
+  <div id="panel-admin" class="panel card-body">
+    <div class="admin-title">Precio base por corredor ($/m²)</div>
+    <table class="admin-table">
+      <thead><tr><th>Corredor</th><th>$/m²</th><th>Demanda</th></tr></thead>
+      <tbody id="admin-zonas"></tbody>
+    </table>
+    <div class="admin-title">Factores de ajuste</div>
+    <table class="admin-table">
+      <thead><tr><th>Servicio</th><th>Factor (suma)</th></tr></thead>
+      <tbody id="admin-servicios"></tbody>
+    </table>
+    <div class="btn-actions">
+      <button class="btn-save" onclick="guardarAdmin()">Guardar cambios</button>
+      <span class="save-badge" id="save-badge">✓ Guardado</span>
+      <button class="btn-reset" onclick="resetAdmin()">Restaurar originales</button>
+    </div>
+  </div>
+</div>
+
+<button class="btn-pdf" onclick="exportarPDF()">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2h6l4 4v8a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="white" stroke-width="1.2" fill="none"/><path d="M10 2v4h4M5 9h6M5 11.5h4" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>
+  Exportar reporte PDF
+</button>
+
+<div class="app-footer">
+  Valuador de Terrenos Industriales · Nuevo León 2025<br>
+  Arq. Alvaro Chapa Villarreal · 81 2289 4100 · Precios MXN sin IVA
+</div>
+
+</main>
+
+<script>
+const DESPACHO = "Arq. Alvaro Chapa Villarreal";
+const TELEFONO = "81 2289 4100";
+
+const DEFAULTS = {
+  zonas: [
+    {key:"apodaca_norte", label:"Apodaca Norte",          base:1800, demanda:"alta"},
+    {key:"apodaca_sur",   label:"Apodaca Sur",             base:1550, demanda:"alta"},
+    {key:"escobedo",      label:"Escobedo / FINSA",        base:1650, demanda:"alta"},
+    {key:"garcia",        label:"García / Mty Norte",      base:1200, demanda:"media"},
+    {key:"guadalupe",     label:"Guadalupe / Oriente",     base:1300, demanda:"media"},
+    {key:"pesqueria",     label:"Pesquería / KIIA",        base:1400, demanda:"alta"},
+    {key:"salinas",       label:"Salinas Victoria",        base:1100, demanda:"media"},
+    {key:"santacatarina", label:"Sta. Catarina Poniente",  base:1250, demanda:"media"},
+    {key:"cienega",       label:"Ciénega de Flores",       base:950,  demanda:"baja"},
+  ],
+  servicios: [
+    {key:"base",    label:"Base sin servicios",    factor:0.70},
+    {key:"agua",    label:"Agua y drenaje",         factor:0.08},
+    {key:"elec",    label:"Electricidad MT/AT",     factor:0.10},
+    {key:"gas",     label:"Gas natural",            factor:0.06},
+    {key:"vial",    label:"Vialidad pavimentada",   factor:0.05},
+    {key:"ferro",   label:"Acceso ferroviario",     factor:0.07},
+    {key:"fibre",   label:"Fibra óptica",           factor:0.04},
+  ]
+};
+
+let CONFIG = JSON.parse(JSON.stringify(DEFAULTS));
+
+function fmt(n){return "$"+Math.round(n).toLocaleString("es-MX");}
+
+function getData(){
+  const zonaKey = document.getElementById("zona").value;
+  const zona    = CONFIG.zonas.find(z=>z.key===zonaKey)||CONFIG.zonas[0];
+  const sup     = parseFloat(document.getElementById("sup").value)||0;
+  const uso     = parseFloat(document.getElementById("uso").value)||1;
+  const forma   = parseFloat(document.getElementById("forma").value)||1;
+  const vial    = parseFloat(document.getElementById("vial").value)||1;
+  const topo    = parseFloat(document.getElementById("topo").value)||1;
+
+  const checks  = {agua:document.getElementById("s_agua").checked, elec:document.getElementById("s_elec").checked, gas:document.getElementById("s_gas").checked, vial:document.getElementById("s_vial").checked, ferro:document.getElementById("s_ferro").checked, fibre:document.getElementById("s_fibre").checked};
+
+  let sf = CONFIG.servicios.find(s=>s.key==="base")?.factor||0.70;
+  ["agua","elec","gas","vial","ferro","fibre"].forEach(k=>{ if(checks[k]) sf += (CONFIG.servicios.find(s=>s.key===k)?.factor||0); });
+  sf = Math.min(sf, 1.20);
+
+  const factor = uso * forma * vial * topo * sf;
+  const xm2    = Math.round(zona.base * factor);
+  const total  = xm2 * sup;
+
+  return {zona, sup, uso, forma, vial, topo, sf, factor, xm2, total, checks};
+}
+
+function calc(){
+  const d = getData();
+  const lo = d.total * 0.85;
+  const hi = d.total * 1.18;
+
+  document.getElementById("r-m2").textContent    = fmt(d.xm2)+"/m²";
+  document.getElementById("r-sup").textContent   = d.sup.toLocaleString("es-MX")+" m²";
+  document.getElementById("r-total").textContent = fmt(d.total);
+  document.getElementById("r-lo").textContent    = fmt(lo);
+  document.getElementById("r-hi").textContent    = fmt(hi);
+  document.getElementById("rneedle").style.left  = "50%";
+  document.getElementById("r-nota").textContent  =
+    "Corredor: "+d.zona.label+" · Precio base: "+fmt(d.zona.base)+"/m² · Demanda: "+d.zona.demanda.toUpperCase()+
+    " · Rango: "+fmt(lo)+" – "+fmt(hi)+". Precios en pesos mexicanos (MXN), sin IVA. No sustituye avalúo formal.";
+
+  // Factores
+  const usoLabel  = document.getElementById("uso").options[document.getElementById("uso").selectedIndex].text;
+  const vialLabel = document.getElementById("vial").options[document.getElementById("vial").selectedIndex].text;
+  const topoLabel = document.getElementById("topo").options[document.getElementById("topo").selectedIndex].text;
+  const formaLabel= document.getElementById("forma").options[document.getElementById("forma").selectedIndex].text;
+
+  const flist = [
+    {n:"Corredor",         v:fmt(d.zona.base)+"/m²",         t: d.zona.demanda==="alta"?"pos": d.zona.demanda==="baja"?"neg":"neu"},
+    {n:"Uso de suelo",     v:"×"+d.uso.toFixed(2)+" — "+usoLabel,   t: d.uso>=1?"pos":"neg"},
+    {n:"Acceso vialidad",  v:"×"+d.vial.toFixed(2)+" — "+vialLabel, t: d.vial>=1?"pos":"neg"},
+    {n:"Topografía",       v:"×"+d.topo.toFixed(2)+" — "+topoLabel, t: d.topo>=1?"pos":"neg"},
+    {n:"Forma",            v:"×"+d.forma.toFixed(2)+" — "+formaLabel,t: d.forma>=1?"pos":"neg"},
+    {n:"Servicios",        v:"×"+d.sf.toFixed(2),                   t: d.sf>=1?"pos":"neg"},
+    {n:"Factor total",     v:"×"+d.factor.toFixed(3),               t: d.factor>=1?"pos":"neg"},
+  ];
+  document.getElementById("lista-factores").innerHTML = flist.map(f=>
+    `<div class="factor-row"><span class="factor-lbl">${f.n}</span><span class="badge badge-${f.t}">${f.v}</span></div>`
+  ).join("");
+
+  // Riesgos
+  const alertas = [];
+  if(d.zona.demanda==="alta")   alertas.push({c:var_suc, t:"Corredor de alta demanda — buen perfil de comercialización"});
+  if(d.zona.demanda==="baja")   alertas.push({c:var_dan, t:"Corredor de baja demanda — tiempo de venta más largo"});
+  if(!d.checks.agua||!d.checks.elec) alertas.push({c:var_dan, t:"Sin servicios básicos (agua/electricidad) — impacta significativamente el valor"});
+  if(!d.checks.gas)             alertas.push({c:var_warn,t:"Sin gas natural — limita usos industriales de mayor demanda"});
+  if(d.topo<0.85)               alertas.push({c:var_dan, t:"Pendiente fuerte — costo adicional en terracería y cimentación"});
+  if(d.forma<0.90)              alertas.push({c:var_warn,t:"Forma irregular pronunciada — reduce el aprovechamiento de la superficie"});
+  if(d.sup<2000)                alertas.push({c:var_warn,t:"Superficie menor a 2,000 m² — mercado comprador más reducido"});
+  if(d.sup>50000)               alertas.push({c:var_warn,t:"Superficie mayor a 5 ha — considerar subdivisión para mejorar liquidez"});
+  if(d.checks.ferro)            alertas.push({c:var_suc, t:"Acceso ferroviario — plus de valor significativo en corredores NL"});
+  if(d.vial>=1.15)              alertas.push({c:var_suc, t:"Frente a autopista o boulevard — incrementa valor y visibilidad"});
+  if(!alertas.length)           alertas.push({c:var_suc, t:"Sin alertas — terreno con buen perfil de comercialización industrial"});
+
+  document.getElementById("lista-riesgos").innerHTML = alertas.map(a=>
+    `<div class="risk-row"><div class="risk-dot" style="background:${a.c};"></div><span>${a.t}</span></div>`
+  ).join("");
+}
+
+const var_suc  = "#2A7A4B";
+const var_warn = "#EF9F27";
+const var_dan  = "#E24B4A";
+
+function showTab(id,el){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("panel-"+id).classList.add("active");
+  el.classList.add("active");
+  if(id==="admin") buildAdmin();
+}
+
+function buildAdmin(){
+  const bz = document.getElementById("admin-zonas"); bz.innerHTML="";
+  CONFIG.zonas.forEach((z,i)=>{
+    bz.innerHTML+=`<tr>
+      <td>${z.label}</td>
+      <td><input type="number" id="az_${i}" value="${z.base}" min="100" max="50000" step="50"></td>
+      <td><select id="ad_${i}">
+        <option value="alta" ${z.demanda==="alta"?"selected":""}>Alta</option>
+        <option value="media" ${z.demanda==="media"?"selected":""}>Media</option>
+        <option value="baja" ${z.demanda==="baja"?"selected":""}>Baja</option>
+      </select></td>
+    </tr>`;
+  });
+
+  const bs = document.getElementById("admin-servicios"); bs.innerHTML="";
+  CONFIG.servicios.forEach((s,i)=>{
+    bs.innerHTML+=`<tr>
+      <td>${s.label}</td>
+      <td><input type="number" id="as_${i}" value="${s.factor}" min="0" max="1" step="0.01"></td>
+    </tr>`;
+  });
+}
+
+function guardarAdmin(){
+  CONFIG.zonas.forEach((_,i)=>{
+    CONFIG.zonas[i].base    = parseFloat(document.getElementById("az_"+i).value)||CONFIG.zonas[i].base;
+    CONFIG.zonas[i].demanda = document.getElementById("ad_"+i).value;
+  });
+  CONFIG.servicios.forEach((_,i)=>{
+    CONFIG.servicios[i].factor = parseFloat(document.getElementById("as_"+i).value)||CONFIG.servicios[i].factor;
+  });
+  const b=document.getElementById("save-badge"); b.style.display="inline-block"; setTimeout(()=>b.style.display="none",2200);
+  calc();
+}
+
+function resetAdmin(){
+  if(!confirm("¿Restaurar todos los valores originales?")) return;
+  CONFIG=JSON.parse(JSON.stringify(DEFAULTS)); buildAdmin(); calc();
+}
+
+function exportarPDF(){
+  const d = getData();
+  const fecha = new Date().toLocaleDateString("es-MX",{year:"numeric",month:"long",day:"numeric"});
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:"mm",format:"a4"});
+  const W=210, mg=18, cw=W-mg*2;
+
+  doc.setFillColor(26,58,42); doc.rect(0,0,W,32,"F");
+  doc.setTextColor(255,255,255); doc.setFontSize(16); doc.setFont("helvetica","bold");
+  doc.text("Valuación Paramétrica — Terreno Industrial",mg,13);
+  doc.setFontSize(10); doc.setFont("helvetica","normal");
+  doc.text(DESPACHO,mg,20); doc.text("WhatsApp: "+TELEFONO,mg,26);
+  doc.text("Fecha: "+fecha,W-mg,20,{align:"right"});
+
+  let y=40;
+  doc.setTextColor(80,80,80); doc.setFontSize(8); doc.setFont("helvetica","bold");
+  doc.text("CORREDOR / ZONA",mg,y); doc.text("SUPERFICIE",mg+80,y); doc.text("USO DE SUELO",mg+120,y);
+  y+=5; doc.setFont("helvetica","normal"); doc.setTextColor(30,30,30);
+  const usoLabel=document.getElementById("uso").options[document.getElementById("uso").selectedIndex].text;
+  doc.text(d.zona.label,mg,y); doc.text(d.sup.toLocaleString("es-MX")+" m²",mg+80,y); doc.text(usoLabel,mg+120,y);
+
+  y+=10;
+  doc.setFillColor(237,245,240); doc.roundedRect(mg,y,cw,28,3,3,"F");
+  doc.setTextColor(26,58,42); doc.setFontSize(9); doc.setFont("helvetica","bold");
+  doc.text("VALOR TOTAL ESTIMADO (MXN, SIN IVA)",mg+6,y+8);
+  doc.setFontSize(19); doc.text(fmt(d.total),mg+6,y+20);
+  doc.setFontSize(10); doc.setFont("helvetica","normal"); doc.setTextColor(80,80,80);
+  doc.text(fmt(d.xm2)+"/m²",mg+cw-4,y+20,{align:"right"});
+
+  y+=34;
+  doc.setFillColor(26,58,42); doc.rect(mg,y,cw,7,"F");
+  doc.setTextColor(255,255,255); doc.setFontSize(8); doc.setFont("helvetica","bold");
+  doc.text("Concepto",mg+3,y+5); doc.text("Valor",mg+130,y+5);
+  y+=7;
+  const rows=[
+    ["Precio base corredor ("+d.zona.label+")", fmt(d.zona.base)+"/m²"],
+    ["Valor unitario ajustado",fmt(d.xm2)+"/m²"],
+    ["Superficie",d.sup.toLocaleString("es-MX")+" m²"],
+    ["Rango mínimo (–15%)",fmt(d.total*0.85)],
+    ["Valor central estimado",fmt(d.total)],
+    ["Rango máximo (+18%)",fmt(d.total*1.18)],
+  ];
+  rows.forEach((r,i)=>{
+    doc.setFillColor(i%2===0?245:255,i%2===0?248:255,i%2===0?245:255);
+    doc.rect(mg,y,cw,7,"F"); doc.setTextColor(50,50,50); doc.setFont("helvetica","normal");
+    doc.text(r[0],mg+3,y+5); doc.text(r[1],mg+130,y+5); y+=7;
+  });
+
+  y+=8;
+  doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(26,58,42);
+  doc.text("Factores de ajuste aplicados",mg,y); y+=6;
+  const usoV=document.getElementById("uso").value;
+  const vialV=document.getElementById("vial").value;
+  const topoV=document.getElementById("topo").value;
+  const formaV=document.getElementById("forma").value;
+  const frows=[
+    ["Uso de suelo","×"+parseFloat(usoV).toFixed(2)],
+    ["Acceso a vialidad","×"+parseFloat(vialV).toFixed(2)],
+    ["Topografía","×"+parseFloat(topoV).toFixed(2)],
+    ["Forma del terreno","×"+parseFloat(formaV).toFixed(2)],
+    ["Servicios disponibles","×"+d.sf.toFixed(2)],
+    ["Factor combinado total","×"+d.factor.toFixed(3)],
+  ];
+  frows.forEach((r,i)=>{
+    doc.setFillColor(i%2===0?245:255,i%2===0?248:255,i%2===0?245:255);
+    doc.rect(mg,y,cw,6,"F"); doc.setTextColor(50,50,50); doc.setFontSize(8); doc.setFont("helvetica","normal");
+    doc.text(r[0],mg+3,y+4.5); doc.text(r[1],mg+150,y+4.5); y+=6;
+  });
+
+  y+=6;
+  doc.setFontSize(7.5); doc.setTextColor(140,140,140); doc.setFont("helvetica","italic");
+  const nota = "Valuación paramétrica elaborada por "+DESPACHO+" · WhatsApp "+TELEFONO+". "+
+    "Precios en pesos mexicanos (MXN), sin IVA. Estimado orientativo basado en condiciones de mercado NL 2025. "+
+    "No sustituye avalúo formal ante notario o institución financiera.";
+  doc.text(doc.splitTextToSize(nota,cw),mg,y);
+
+  doc.setDrawColor(200,200,200); doc.line(mg,285,W-mg,285);
+  doc.setFontSize(7.5); doc.setTextColor(160,160,160); doc.setFont("helvetica","normal");
+  doc.text(DESPACHO+" · Valuador Industrial NL 2025",mg,289);
+  doc.text("Página 1",W-mg,289,{align:"right"});
+  doc.save("valuacion_industrial_"+new Date().toISOString().slice(0,10)+".pdf");
+}
+
+document.querySelectorAll("select,input[type=number],input[type=checkbox]").forEach(el=>{
+  el.addEventListener("change",calc);
+  el.addEventListener("input",calc);
+});
+calc();
+</script>
+</body>
+</html>
